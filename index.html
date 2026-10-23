@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DishDrop | Recipe Sharing Community</title>
+<style>
+:root{--ink:#1f2a24;--bg:#f2f6f1;--beet:#9b2d5a;--tur:#e8a317;--line:#cfd9cc;--card:#fff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+h1,h2,h3{font-family:Georgia,serif}
+header{background:var(--ink);color:#fff;padding:14px 24px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center}
+header h1{font-size:1.9rem;line-height:1.1}
+header h1 small{display:block;font-family:"Segoe UI",Arial,sans-serif;font-size:.8rem;font-weight:400;color:var(--tur);margin-top:2px}
+nav{display:flex;flex-wrap:wrap;gap:6px}
+nav button{background:none;border:1px solid #5b6b62;color:#fff;padding:7px 14px;border-radius:20px;cursor:pointer}
+nav button:hover,nav button.on{background:var(--tur);color:var(--ink);border-color:var(--tur)}
+main{max-width:1000px;margin:24px auto;padding:0 16px}
+.page{display:none}.page.show{display:block}
+h2{margin-bottom:14px;font-size:1.6rem}
+.bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+input,select,textarea{width:100%;padding:9px;border:1px solid var(--line);border-radius:6px;font:inherit;background:#fff}
+.bar input{flex:2;min-width:180px}.bar select{flex:1;min-width:140px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:20px;max-width:520px}
+label{display:block;margin:10px 0 4px;font-weight:600}
+.btn{background:var(--beet);color:#fff;border:0;padding:9px 18px;border-radius:6px;cursor:pointer;margin-top:14px;font:inherit}
+.btn:hover{background:#7d2249}
+.btn.sm{padding:5px 10px;margin:8px 6px 0 0;font-size:.85rem}
+.btn.alt{background:#5b6b62}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.recipe{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--tur);border-radius:8px;padding:16px}
+.recipe h3{color:var(--beet);margin-bottom:4px}
+.meta{font-size:.85rem;color:#5b6b62;margin-bottom:8px}
+.recipe ul,.recipe ol{margin:4px 0 8px 20px;font-size:.92rem}
+.err{color:#b00020;font-size:.88rem;margin-top:8px;min-height:1.2em}
+.tag{display:inline-block;padding:2px 10px;border-radius:12px;font-size:.8rem;font-weight:600}
+.Pending{background:#fde9b8}.Progress{background:#cfe3f7}.Fulfilled{background:#cdeccf}
+.req{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:10px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
+.req-recipes{flex:1 1 100%;padding-top:10px;border-top:1px solid var(--line)}
+.req-recipes h4{margin-bottom:6px;color:var(--beet)}
+.req-recipes ul,.req-recipes ol{margin:4px 0 8px 20px;font-size:.92rem}
+.storage-note{margin:0 0 16px;color:#5b6b62;font-size:.9rem}
+.app-status{margin:0 auto 16px;max-width:1000px;padding:0 16px;color:#5b6b62}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;text-align:center}
+.stat b{display:block;font-size:2rem;color:var(--beet);font-family:Georgia,serif}
+.cat{display:flex;align-items:center;gap:10px;margin:6px 0}
+.cat span.n{width:110px}.cat i{display:block;height:14px;background:var(--tur);border-radius:7px}
+.empty{color:#5b6b62;padding:20px 0}
+@media(max-width:600px){header{justify-content:center}}
+</style>
+</head>
+<body>
+<header>
+  <h1>DishDrop<small>A recipe sharing community</small></h1>
+  <nav id="nav">
+    <button data-p="home">Recipes</button>
+    <button data-p="add">Share a Recipe</button>
+    <button data-p="req">Requests</button>
+    <button data-p="dash">Dashboard</button>
+    <button data-p="login" id="authBtn">Login</button>
+  </nav>
+</header>
+
+<main>
+  <p class="app-status" id="appStatus" role="status" aria-live="polite"></p>
+  <!-- RECIPES -->
+  <section id="home" class="page">
+    <h2>Community Recipes</h2>
+    <div class="bar">
+      <input id="search" placeholder="Search by title or ingredient">
+      <select id="filter">
+        <option value="">All categories</option><option>Breakfast</option><option>Lunch</option>
+        <option>Dinner</option><option>Snacks</option><option>Dessert</option>
+      </select>
+    </div>
+    <div id="list" class="grid"></div>
+  </section>
+
+  <!-- ADD / EDIT -->
+  <section id="add" class="page">
+    <h2 id="formTitle">Share a Recipe</h2>
+    <div class="box">
+      <label>Title</label><input id="rTitle">
+      <label>Category</label>
+      <select id="rCat"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snacks</option><option>Dessert</option></select>
+      <label>Cooking time (minutes)</label><input id="rTime" type="number" min="1">
+      <label>Ingredients (one per line)</label><textarea id="rIng" rows="4"></textarea>
+      <label>Steps (one per line)</label><textarea id="rSteps" rows="4"></textarea>
+      <div class="err" id="rErr"></div>
+      <button class="btn" id="saveRecipe">Save recipe</button>
+      <button class="btn alt" id="cancelEdit">Cancel</button>
+    </div>
+  </section>
+
+  <!-- REQUESTS -->
+  <section id="req" class="page">
+    <h2>Recipe Requests</h2>
+    <p class="storage-note">Requests and recipe responses are shared with every signed-in member.</p>
+    <div class="box" style="margin-bottom:18px">
+      <label>Which recipe would you like the community to share?</label>
+      <input id="reqText" placeholder="e.g. Hyderabadi dum biryani">
+      <div class="err" id="reqErr"></div>
+      <button class="btn" id="addReq">Send request</button>
+    </div>
+    <div id="reqList"></div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="dash" class="page">
+    <h2>Dashboard</h2>
+    <div id="stats" class="stats"></div>
+    <h3>Recipes by category</h3>
+    <div id="cats"></div>
+  </section>
+
+  <!-- LOGIN / REGISTER -->
+  <section id="login" class="page">
+    <h2 id="authTitle">Login</h2>
+    <div class="box">
+      <div id="nameRow" style="display:none"><label>Full name</label><input id="aName"></div>
+      <label>Email</label><input id="aEmail" type="email">
+      <label>Password</label><input id="aPass" type="password">
+      <div class="err" id="aErr"></div>
+      <button class="btn" id="authGo">Login</button>
+      <button class="btn alt" id="authSwitch">New here? Register</button>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
