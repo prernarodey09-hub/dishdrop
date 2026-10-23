@@ -364,7 +364,7 @@ $("authSwitch").addEventListener("click", () => {
 $("authGo").addEventListener("click", async () => {
   $("aErr").textContent = "";
   if (!client) {
-    $("aErr").textContent = "Add your Supabase project URL and public key to supabase-config.js first.";
+    $("aErr").textContent = "Login is not available yet. Please try again later.";
     return;
   }
   const name = $("aName").value.trim();
@@ -425,7 +425,7 @@ window.delRequest = id => delRequest(id).catch(error => alert(`Could not remove 
 async function start() {
   show("login");
   if (!supabaseConfigured) {
-    setStatus("DishDrop needs a Supabase project. Follow README.md to configure the database and public key.");
+    setStatus("DishDrop is being set up. Please try again later.");
     return;
   }
   if (!client) {

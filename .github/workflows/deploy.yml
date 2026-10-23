@@ -26,9 +26,28 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Prepare site files
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
         run: |
           mkdir _site
-          cp index.html app.js supabase-config.js _site/
+          cp index.html app.js _site/
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          configuration = {
+              "url": os.environ.get("SUPABASE_URL", "YOUR_SUPABASE_PROJECT_URL"),
+              "anonKey": os.environ.get("SUPABASE_ANON_KEY", "YOUR_SUPABASE_PUBLISHABLE_KEY"),
+          }
+          Path("_site/supabase-config.js").write_text(
+              "window.DISH_DROP_SUPABASE = "
+              + json.dumps(configuration)
+              + ";\n",
+              encoding="utf-8",
+          )
+          PY
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:
