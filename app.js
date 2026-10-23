@@ -23,6 +23,39 @@ let requests = [];
 let editId = null;
 let replyingToRequestId = null;
 let registering = false;
+let registrationCooldownTimer = null;
+const registrationCooldownKey = "dishdrop-registration-cooldown-until";
+
+function updateRegistrationButton() {
+  const cooldownUntil = Number(localStorage.getItem(registrationCooldownKey) || 0);
+  const remaining = Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000));
+  if (registering && remaining > 0) {
+    $("authGo").disabled = true;
+    $("authGo").textContent = `Wait ${remaining}s`;
+    if (!registrationCooldownTimer) {
+      registrationCooldownTimer = setInterval(updateRegistrationButton, 1000);
+    }
+    return;
+  }
+  $("authGo").disabled = false;
+  $("authGo").textContent = registering ? "Register" : "Login";
+  if (remaining === 0) localStorage.removeItem(registrationCooldownKey);
+  if (registrationCooldownTimer) {
+    clearInterval(registrationCooldownTimer);
+    registrationCooldownTimer = null;
+  }
+}
+
+function explainAuthenticationError(error) {
+  const message = error.message || "Something went wrong. Please try again.";
+  if (!registering || !/security purposes|rate.?limit|after \d+ seconds/i.test(message)) {
+    return message;
+  }
+  const seconds = Number(message.match(/after\s+(\d+)\s+seconds/i)?.[1] || 60);
+  localStorage.setItem(registrationCooldownKey, String(Date.now() + seconds * 1000));
+  updateRegistrationButton();
+  return `Too many registration attempts. Wait ${seconds} seconds before trying again. If you already registered, choose “Have an account? Login” and sign in with your email and password.`;
+}
 
 function setStatus(message) {
   $("appStatus").textContent = message;
@@ -356,9 +389,10 @@ $("nav").addEventListener("click", async event => {
 $("authSwitch").addEventListener("click", () => {
   registering = !registering;
   $("nameRow").style.display = registering ? "block" : "none";
-  $("authTitle").textContent = $("authGo").textContent = registering ? "Register" : "Login";
+  $("authTitle").textContent = registering ? "Register" : "Login";
   $("authSwitch").textContent = registering ? "Have an account? Login" : "New here? Register";
   $("aErr").textContent = "";
+  updateRegistrationButton();
 });
 
 $("authGo").addEventListener("click", async () => {
@@ -386,11 +420,12 @@ $("authGo").addEventListener("click", async () => {
     }
     registering = false;
     $("nameRow").style.display = "none";
-    $("authTitle").textContent = $("authGo").textContent = "Login";
+    $("authTitle").textContent = "Login";
     $("authSwitch").textContent = "New here? Register";
+    updateRegistrationButton();
     await finishAuthentication(result.data.user);
   } catch (error) {
-    $("aErr").textContent = error.message;
+    $("aErr").textContent = explainAuthenticationError(error);
   }
 });
 
@@ -424,6 +459,7 @@ window.delRequest = id => delRequest(id).catch(error => alert(`Could not remove 
 
 async function start() {
   show("login");
+  updateRegistrationButton();
   if (!supabaseConfigured) {
     setStatus("DishDrop is being set up. Please try again later.");
     return;
