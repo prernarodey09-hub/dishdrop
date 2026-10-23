@@ -1,6 +1,6 @@
 # DishDrop
 
-DishDrop is a static recipe-sharing site. Supabase Auth handles sign-in, and Supabase Postgres stores recipes and community requests so signed-in members can see them across browsers and devices.
+DishDrop is a recipe sharing community. It is a static recipe-sharing site: Supabase Auth handles sign-in, and Supabase Postgres stores recipes and community requests so signed-in members can see them across browsers and devices.
 
 ## Configure Supabase
 
